@@ -1,190 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>图像处理应用</title>
-		<link rel="stylesheet" href="/static/style.css" />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap"
-			rel="stylesheet"
-		/>
-	</head>
-	<body>
-		<div class="container">
-			<header class="app-header">
-				<div class="header-top">
-					<h1>🎨 智能图像处理</h1>
-					<div class="user-info">
-						<span>欢迎, {{ user_email }}</span>
-						<a href="/logout" class="logout-button">登出</a>
-					</div>
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>图像处理应用</title>
+	<link rel="stylesheet" href="/static/style.css" />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+	<div class="container">
+		<header class="app-header">
+			<div class="header-top">
+				<h1>🎨 智能图像处理</h1>
+				<div class="user-info">
+					<span id="userEmailDisplay">欢迎, 用户</span> <a href="#" id="logoutButton" class="logout-button">登出</a>
 				</div>
-				<p>上传您的图片，即刻体验灰度转换</p>
-			</header>
+			</div>
+			<p>上传您的图片，即刻体验灰度转换</p>
+		</header>
 
-			<section class="upload-section card">
-				<h2>上传图片</h2>
-				<form id="uploadForm" enctype="multipart/form-data" class="upload-form">
-					<label for="imageInput" class="custom-file-upload">
-						<span id="fileNameDisplay">选择图片文件...</span>
-						<input
-							type="file"
-							name="file"
-							id="imageInput"
-							accept="image/*"
-							required
-						/>
-					</label>
-					<button type="submit" class="submit-button">上传并处理</button>
-				</form>
-				<div id="loadingIndicator" class="loading-indicator">
-					<div class="spinner"></div>
-					<p>处理中，请稍候...</p>
-				</div>
-				<p id="errorMessage" class="error-message"></p>
-			</section>
+		<section class="upload-section card">
+			<h2>上传图片</h2>
+			<form id="uploadForm" enctype="multipart/form-data" class="upload-form">
+				<label for="imageInput" class="custom-file-upload">
+					<span id="fileNameDisplay">选择图片文件...</span>
+					<input type="file" name="file" id="imageInput" accept="image/*" required />
+				</label>
+				<button type="submit" class="submit-button">上传并处理</button>
+			</form>
+			<div id="loadingIndicator" class="loading-indicator">
+				<div class="spinner"></div>
+				<p>处理中，请稍候...</p>
+			</div>
+			<p id="errorMessage" class="error-message"></p>
+		</section>
 
-			<section class="video-section card">
-				<h2>实时摄像头视频</h2>
-				<div class="video-wrapper">
-					<img
-						id="videoFeed"
-						src="/video_feed"
-						alt="Camera Feed"
-						onerror="this.onerror=null;this.src='/static/video_placeholder.png';"
-					/>
-				</div>
-				<p>此视频流显示实时摄像头画面及人脸检测。</p>
-			</section>
+		<section class="video-section card">
+			<h2>实时摄像头视频</h2>
+			<div class="video-wrapper">
+				<img id="videoFeed" src="" alt="Camera Feed"
+					onerror="this.onerror=null;this.src='/static/video_placeholder.png';" />
+			</div>
+			<p>此视频流显示实时摄像头画面及人脸检测。</p>
+		</section>
 
-			<section class="results-section" id="resultsSection"></section>
+		<section class="results-section" id="resultsSection"></section>
 
-			<footer class="app-footer">
-				<p>&copy; 2025 智能图像处理应用. 版权所有.</p>
-			</footer>
-		</div>
+		<footer class="app-footer">
+			<p>&copy; 2025 智能图像处理应用. 版权所有.</p>
+		</footer>
+	</div>
 
-		<script>
-			const uploadForm = document.getElementById("uploadForm");
-			const imageInput = document.getElementById("imageInput");
-			const fileNameDisplay = document.getElementById("fileNameDisplay");
-			const loadingIndicator = document.getElementById("loadingIndicator");
-			const errorMessage = document.getElementById("errorMessage");
-			const resultsSection = document.getElementById("resultsSection");
+	<script>
+		// 定义您的后端 API 基础 URL
+		const BACKEND_API_BASE_URL = "https://3571b520-68af-404d-828d-860db9009f16-00-3w177559c5lwh.sisko.replit.dev";
 
-			// 检查 JWT 是否有效
-			async function checkAuthAndRedirect() {
-				try {
-					const response = await fetch("/check_auth"); // 后端需要提供一个简单的认证检查路由
-					if (response.status === 401) {
-						// JWT 无效，重定向到登录页
-						window.location.href = `/login?redirect_to=${encodeURIComponent(
-							window.location.pathname + window.location.search
-						)}`;
+		const uploadForm = document.getElementById("uploadForm");
+		const imageInput = document.getElementById("imageInput");
+		const fileNameDisplay = document.getElementById("fileNameDisplay");
+		const loadingIndicator = document.getElementById("loadingIndicator");
+		const errorMessage = document.getElementById("errorMessage");
+		const resultsSection = document.getElementById("resultsSection");
+		const videoFeedImg = document.getElementById("videoFeed"); // 获取视频流图片元素
+		const userEmailDisplay = document.getElementById("userEmailDisplay"); // 获取用户邮箱显示元素
+		const logoutButton = document.getElementById("logoutButton"); // 获取登出按钮
+
+		// 设置视频流的 src
+		videoFeedImg.src = `${BACKEND_API_BASE_URL}/video_feed`;
+
+		// 检查 JWT 是否有效并获取用户邮箱
+		async function checkAuthAndRedirect() {
+			try {
+				const response = await fetch(`${BACKEND_API_BASE_URL}/check_auth`); // 后端需要提供一个简单的认证检查路由
+				if (response.status === 401) {
+					// JWT 无效，重定向到登录页
+					window.location.href = `/login?redirect_to=${encodeURIComponent(
+						window.location.pathname + window.location.search
+					)}`;
+				} else if (response.ok) {
+					const data = await response.json();
+					if (data && data.user_email) {
+						userEmailDisplay.textContent = `欢迎, ${data.user_email}`;
 					}
-					// 如果响应是 200 OK，则说明认证成功，继续加载页面
-				} catch (error) {
-					console.error("认证检查失败:", error);
-					// 可以在这里选择是否重定向，或者显示错误消息
 				}
+				// 如果响应是 200 OK，则说明认证成功，继续加载页面
+			} catch (error) {
+				console.error("认证检查失败:", error);
+				// 可以在这里选择是否重定向，或者显示错误消息
 			}
+		}
 
-			// 推荐在页面加载时调用认证检查
-			// window.onload = checkAuthAndRedirect; // 如果您在 main.py 中已经通过 Depends(get_current_user_jwt) 保护了 /index 路由，则不需要此 JS 侧的检查
+		// 页面加载时调用认证检查
+		window.onload = checkAuthAndRedirect;
 
-			imageInput.addEventListener("change", () => {
-				if (imageInput.files.length > 0) {
-					fileNameDisplay.textContent = imageInput.files[0].name;
+		// 登出功能
+		logoutButton.addEventListener("click", async (event) => {
+			event.preventDefault();
+			try {
+				const response = await fetch(`${BACKEND_API_BASE_URL}/logout`, {
+					method: "GET", // 假设登出是 GET 请求
+				});
+				if (response.ok) {
+					window.location.href = `${window.location.origin}/login`; // 重定向到登录页
 				} else {
-					fileNameDisplay.textContent = "选择图片文件...";
+					const errorData = await response.json();
+					alert(`登出失败: ${errorData.detail || "未知错误"}`);
 				}
-			});
+			} catch (error) {
+				console.error("登出时出错:", error);
+				alert("网络错误或服务器无响应，登出失败。");
+			}
+		});
 
-			uploadForm.addEventListener("submit", async (event) => {
-				event.preventDefault(); // 阻止表单默认提交行为
 
-				errorMessage.textContent = ""; // 清除之前的错误信息
-				resultsSection.innerHTML = ""; // 清除之前的图片结果
-				resultsSection.style.display = "none"; // 隐藏结果区域
-				loadingIndicator.style.display = "flex"; // 显示加载指示器
+		imageInput.addEventListener("change", () => {
+			if (imageInput.files.length > 0) {
+				fileNameDisplay.textContent = imageInput.files[0].name;
+			} else {
+				fileNameDisplay.textContent = "选择图片文件...";
+			}
+		});
 
-				const formData = new FormData();
-				const file = imageInput.files[0];
-				if (!file) {
-					errorMessage.textContent = "请选择一个图片文件！";
-					loadingIndicator.style.display = "none";
+		uploadForm.addEventListener("submit", async (event) => {
+			event.preventDefault(); // 阻止表单默认提交行为
+
+			errorMessage.textContent = ""; // 清除之前的错误信息
+			resultsSection.innerHTML = ""; // 清除之前的图片结果
+			resultsSection.style.display = "none"; // 隐藏结果区域
+			loadingIndicator.style.display = "flex"; // 显示加载指示器
+
+			const formData = new FormData();
+			const file = imageInput.files[0];
+			if (!file) {
+				errorMessage.textContent = "请选择一个图片文件！";
+				loadingIndicator.style.display = "none";
+				return;
+			}
+			formData.append("file", file);
+
+			try {
+				const response = await fetch(`${BACKEND_API_BASE_URL}/upload_image`, { // 修改：使用 BACKEND_API_BASE_URL
+					method: "POST",
+					body: formData,
+				});
+
+				if (response.status === 401) {
+					// 未认证，重定向到登录页
+					window.location.href = `${window.location.origin}/login?redirect_to=${encodeURIComponent(
+						window.location.pathname + window.location.search
+					)}`;
 					return;
 				}
-				formData.append("file", file);
 
-				try {
-					const response = await fetch("/upload_image", {
-						method: "POST",
-						body: formData,
-					});
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.detail || "图片处理失败。");
+				}
 
-					if (response.status === 401) {
-						// 未认证，重定向到登录页
-						window.location.href = `/login?redirect_to=${encodeURIComponent(
-							window.location.pathname + window.location.search
-						)}`;
-						return;
-					}
+				const data = await response.json();
 
-					if (!response.ok) {
-						const errorData = await response.json();
-						throw new Error(errorData.detail || "图片处理失败。");
-					}
-
-					const data = await response.json();
-
-					// 创建原始图片卡片
-					const originalImageCard = document.createElement("div");
-					originalImageCard.className = "image-card";
-					originalImageCard.innerHTML = `
+				// 创建原始图片卡片
+				const originalImageCard = document.createElement("div");
+				originalImageCard.className = "image-card";
+				originalImageCard.innerHTML = `
                         <h3>原始图片</h3>
                         <div class="image-wrapper">
-                            <img src="${
-															data.original_image_url
-														}" alt="Original Image" onload="this.style.opacity=1;">
+                            <img src="${data.original_image_url.startsWith('http') ? data.original_image_url : `${BACKEND_API_BASE_URL}${data.original_image_url}`
+					}" alt="Original Image" onload="this.style.opacity=1;">
                         </div>
                         <p>文件大小: ${formatBytes(file.size)}</p>
                     `;
 
-					const processedImageCard = document.createElement("div");
-					processedImageCard.className = "image-card";
-					processedImageCard.innerHTML = `
+				const processedImageCard = document.createElement("div");
+				processedImageCard.className = "image-card";
+				processedImageCard.innerHTML = `
                         <h3>灰度处理图片</h3>
                         <div class="image-wrapper">
-                            <img src="${data.processed_image_url}" alt="Grayscale Image" onload="this.style.opacity=1;">
+                            <img src="${data.processed_image_url.startsWith('http') ? data.processed_image_url : `${BACKEND_API_BASE_URL}${data.processed_image_url}`
+					}" alt="Grayscale Image" onload="this.style.opacity=1;">
                         </div>
                         <p>处理完成</p>
                     `;
 
-					// 将图片卡片添加到结果区域
-					resultsSection.appendChild(originalImageCard);
-					resultsSection.appendChild(processedImageCard);
-					resultsSection.style.display = "flex"; // 显示结果区域
-				} catch (error) {
-					console.error("上传或处理图片时出错:", error);
-					errorMessage.textContent = "图片处理失败: " + error.message;
-				} finally {
-					loadingIndicator.style.display = "none"; // 隐藏加载指示器
-				}
-			});
-
-			// 辅助函数：格式化文件大小
-			function formatBytes(bytes, decimals = 2) {
-				if (bytes === 0) return "0 Bytes";
-				const k = 1024;
-				const dm = decimals < 0 ? 0 : decimals;
-				const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-				const i = Math.floor(Math.log(bytes) / Math.log(k));
-				return (
-					parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
-				);
+				// 将图片卡片添加到结果区域
+				resultsSection.appendChild(originalImageCard);
+				resultsSection.appendChild(processedImageCard);
+				resultsSection.style.display = "flex"; // 显示结果区域
+			} catch (error) {
+				console.error("上传或处理图片时出错:", error);
+				errorMessage.textContent = "图片处理失败: " + error.message;
+			} finally {
+				loadingIndicator.style.display = "none"; // 隐藏加载指示器
 			}
-		</script>
-	</body>
+		});
+
+		// 辅助函数：格式化文件大小
+		function formatBytes(bytes, decimals = 2) {
+			if (bytes === 0) return "0 Bytes";
+			const k = 1024;
+			const dm = decimals < 0 ? 0 : decimals;
+			const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+			const i = Math.floor(Math.log(bytes) / Math.log(k));
+			return (
+				parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
+			);
+		}
+	</script>
+</body>
+
 </html>
