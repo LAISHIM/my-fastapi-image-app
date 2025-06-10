@@ -43,13 +43,12 @@
 	</div>
 
 	<script>
-		// 定义您的后端 API 基础 URL
-		// !!! 务必替换为您的 Replit 后端实际 URL !!!
-		const BACKEND_API_BASE_URL = "https://your-replit-backend-name.replit.dev";
+		// 已将 BACKEND_API_BASE_URL 替换为您的实际后端 URL
+		const BACKEND_API_BASE_URL = "https://3571b520-68af-404d-828d-860db9009f16-00-3w177559c5lwh.sisko.replit.dev";
 
 		const sendCodeButton = document.getElementById("sendCodeButton");
 		const emailInput = document.getElementById("email");
-		const codeInput = document.getElementById("code");
+		const codeInput = document.getElementById("codeInput"); // 修正：id为codeInput
 		const loginForm = document.getElementById("loginForm");
 		const loginMessage = document.getElementById("loginMessage");
 		const errorMessage = document.getElementById("errorMessage");
@@ -95,13 +94,13 @@
 			loginMessage.textContent = "发送中...";
 
 			try {
-				const formData = new FormData();
-				formData.append("email", email);
-
-				// 修改这里：使用 BACKEND_API_BASE_URL 拼接正确的后端路由
+				// 使用 BACKEND_API_BASE_URL 拼接正确的后端路由
 				const response = await fetch(`${BACKEND_API_BASE_URL}/send-code`, {
 					method: "POST",
-					body: formData,
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded", // 确保发送表单数据
+					},
+					body: `email=${encodeURIComponent(email)}`, // 发送表单数据
 				});
 
 				if (response.ok) {
@@ -140,7 +139,7 @@
 				formData.append("code", code);
 				formData.append("redirect_to", redirectTo); // 传递重定向目标
 
-				// 修改这里：使用 BACKEND_API_BASE_URL 拼接正确的后端路由
+				// 使用 BACKEND_API_BASE_URL 拼接正确的后端路由
 				const response = await fetch(`${BACKEND_API_BASE_URL}/login`, {
 					method: "POST",
 					body: formData,
