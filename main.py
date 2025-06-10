@@ -17,8 +17,8 @@ from fastapi.responses import (
 )
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware  # 导入 CORS 中间件
 
-# from fastapi.middleware.sessions import SessionMiddleware # <--- 移除会话中间件
 import cv2 as cv  # 将cv2导入为cv
 import asyncio
 import threading
@@ -48,6 +48,27 @@ load_dotenv()
 app = FastAPI(
     title="智能图像处理与认证系统",
     description="本地摄像头视频流、图片处理和用户认证服务",
+)
+
+# --- CORS 配置 ---
+# origins 列表应包含您的前端应用所部署的所有域名
+# 确保包含您的 GitHub Pages 域名，且大小写正确
+origins = [
+    "http://localhost:8000",  # 本地开发测试用
+    "http://127.0.0.1:8000",  # 本地开发测试用
+    "https://LAISHIM.github.io",  # <-- 已修正为大写 LAISHIM
+    # 如果您的前端部署在其他路径，例如 https://LAISHIM.github.io/your-repo-name/
+    # 您可能需要根据实际情况调整此列表。
+    # 如果 Replit 后端有自己的访问域名，也可能需要加进来
+    # "https://3571b520-68af-404d-828d-860db9009f16-00-3w177559c5lwh.sisko.replit.dev", # 如果你的replit部署域名也需要CORS
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,  # 允许发送 cookie (对于 JWT 认证很重要)
+    allow_methods=["*"],  # 允许所有 HTTP 方法
+    allow_headers=["*"],  # 允许所有 HTTP 头
 )
 
 # --- JWT 配置 ---
@@ -123,17 +144,17 @@ async def lifespan(app: FastAPI):
     # global camera # 如果使用真实摄像头，取消注释
     # camera = cv.VideoCapture(0) # 如果使用真实摄像头，取消注释
     # if camera.isOpened(): # 如果使用真实摄像头，取消注释
-    #     print("摄像头已成功打开。") # 如果使用真实摄像头，取消注释
+    #       print("摄像头已成功打开。") # 如果使用真实摄像头，取消注释
     # else: # 如果使用真实摄像头，取消注释
-    #     print("警告：无法打开摄像头。视频流将不可用。") # 如果使用真实摄像头，取消注释
+    #       print("警告：无法打开摄像头。视频流将不可用。") # 如果使用真实摄像头，取消注释
     # asyncio.create_task(update_frame()) # 如果使用真实摄像头，取消注释
     await run_performance_test()  # 运行性能测试
     yield
     # 关闭时执行
     print("应用关闭中...")
     # if camera and camera.isOpened(): # 如果使用真实摄像头，取消注释
-    #     camera.release() # 如果使用真实摄像头，取消注释
-    #     print("摄像头已关闭。") # 如果使用真实摄像头，取消注释
+    #       camera.release() # 如果使用真实摄像头，取消注释
+    #       print("摄像头已关闭。") # 如果使用真实摄像头，取消注释
 
 
 app.router.lifespan_context = lifespan
@@ -499,7 +520,7 @@ async def run_performance_test():
         try:
             img_for_test = cv.imread(test_image_path)
             if img_for_test is not None:
-                print("\\n--- 图像处理性能测试 ---")
+                print("\n--- 图像处理性能测试 ---")
 
                 # 测试 NumPy 方法
                 def numpy_gray_value_test():
@@ -521,7 +542,7 @@ async def run_performance_test():
                     f"time for numpy_gray_value_test (vectorized): {result2:.6f} seconds"
                 )
                 print(f"time for cv2_gray_value_test: {result3:.6f} seconds")
-                print("--- 性能测试结束 ---\\n")
+                print("--- 性能测试结束 ---\n")
             else:
                 print(f"警告: 无法读取用于性能测试的图片: '{test_image_path}'. 请确保文件存在且可读。")
         except Exception as e:
