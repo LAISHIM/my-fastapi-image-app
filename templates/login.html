@@ -1,184 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>登录 - 智能图像处理</title>
-		<link rel="stylesheet" href="/static/style.css" />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap"
-			rel="stylesheet"
-		/>
-	</head>
-	<body>
-		<div class="container login-container">
-			<header class="app-header">
-				<h1>欢迎回来！</h1>
-				<p>请登录以使用图像处理服务</p>
-			</header>
 
-			<section class="login-section card">
-				<h2>用户登录</h2>
-				<form id="loginForm" class="login-form">
-					<div class="input-group">
-						<label for="email">邮箱地址</label>
-						<input
-							type="email"
-							id="email"
-							name="email"
-							placeholder="请输入您的邮箱"
-							required
-						/>
-					</div>
-					<div class="input-group verification-group">
-						<label for="code">验证码</label>
-						<input
-							type="text"
-							id="code"
-							name="code"
-							placeholder="请输入验证码"
-							required
-						/>
-						<button type="button" id="sendCodeButton" class="send-code-button">
-							发送验证码
-						</button>
-					</div>
-					<input
-						type="hidden"
-						id="redirectTo"
-						name="redirect_to"
-						value="/index"
-					/>
-					<button type="submit" class="submit-button">登录</button>
-				</form>
-				<p id="loginMessage" class="success-message"></p>
-				<p id="errorMessage" class="error-message"></p>
-			</section>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>登录 - 智能图像处理</title>
+	<link rel="stylesheet" href="/static/style.css" />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+</head>
 
-			<footer class="app-footer">
-				<p>&copy; 2025 智能图像处理应用. 版权所有.</p>
-			</footer>
-		</div>
+<body>
+	<div class="container login-container">
+		<header class="app-header">
+			<h1>欢迎回来！</h1>
+			<p>请登录以使用图像处理服务</p>
+		</header>
 
-		<script>
-			const sendCodeButton = document.getElementById("sendCodeButton");
-			const emailInput = document.getElementById("email");
-			const codeInput = document.getElementById("code");
-			const loginForm = document.getElementById("loginForm");
-			const loginMessage = document.getElementById("loginMessage");
-			const errorMessage = document.getElementById("errorMessage");
-			const redirectToInput = document.getElementById("redirectTo");
+		<section class="login-section card">
+			<h2>用户登录</h2>
+			<form id="loginForm" class="login-form">
+				<div class="input-group">
+					<label for="email">邮箱地址</label>
+					<input type="email" id="email" name="email" placeholder="请输入您的邮箱" required />
+				</div>
+				<div class="input-group verification-group">
+					<label for="code">验证码</label>
+					<input type="text" id="code" name="code" placeholder="请输入验证码" required />
+					<button type="button" id="sendCodeButton" class="send-code-button">
+						发送验证码
+					</button>
+				</div>
+				<input type="hidden" id="redirectTo" name="redirect_to" value="https://laishim.github.io/" />
+				<button type="submit" class="submit-button">登录</button>
+			</form>
+			<p id="loginMessage" class="success-message"></p>
+			<p id="errorMessage" class="error-message"></p>
+		</section>
 
-			let countdown = 0;
-			let countdownInterval = null;
+		<footer class="app-footer">
+			<p>&copy; 2025 智能图像处理应用. 版权所有.</p>
+		</footer>
+	</div>
 
-			// 从 URL 获取 redirect_to 参数
-			const urlParams = new URLSearchParams(window.location.search);
-			const redirectToParam = urlParams.get("redirect_to");
-			if (redirectToParam) {
-				redirectToInput.value = decodeURIComponent(redirectToParam);
+	<script>
+		// 定义您的后端 API 基础 URL
+		// !!! 务必替换为您的 Replit 后端实际 URL !!!
+		const BACKEND_API_BASE_URL = "https://your-replit-backend-name.replit.dev";
+
+		const sendCodeButton = document.getElementById("sendCodeButton");
+		const emailInput = document.getElementById("email");
+		const codeInput = document.getElementById("code");
+		const loginForm = document.getElementById("loginForm");
+		const loginMessage = document.getElementById("loginMessage");
+		const errorMessage = document.getElementById("errorMessage");
+		const redirectToInput = document.getElementById("redirectTo");
+
+		let countdown = 0;
+		let countdownInterval = null;
+
+		// 从 URL 获取 redirect_to 参数 (如果存在)
+		const urlParams = new URLSearchParams(window.location.search);
+		const redirectToParam = urlParams.get("redirect_to");
+		if (redirectToParam) {
+			redirectToInput.value = decodeURIComponent(redirectToParam);
+		}
+
+		function startCountdown() {
+			countdown = 60; // 倒计时 60 秒
+			sendCodeButton.disabled = true;
+			sendCodeButton.classList.add("disabled");
+			sendCodeButton.textContent = `重新发送 (${countdown}s)`;
+
+			countdownInterval = setInterval(() => {
+				countdown--;
+				if (countdown <= 0) {
+					clearInterval(countdownInterval);
+					sendCodeButton.disabled = false;
+					sendCodeButton.classList.remove("disabled");
+					sendCodeButton.textContent = "发送验证码";
+				} else {
+					sendCodeButton.textContent = `重新发送 (${countdown}s)`;
+				}
+			}, 1000);
+		}
+
+		sendCodeButton.addEventListener("click", async () => {
+			const email = emailInput.value.trim();
+			if (!email) {
+				errorMessage.textContent = "请输入邮箱地址！";
+				return;
 			}
 
-			function startCountdown() {
-				countdown = 60; // 倒计时 60 秒
-				sendCodeButton.disabled = true;
-				sendCodeButton.classList.add("disabled");
-				sendCodeButton.textContent = `重新发送 (${countdown}s)`;
+			errorMessage.textContent = "";
+			loginMessage.textContent = "发送中...";
 
-				countdownInterval = setInterval(() => {
-					countdown--;
-					if (countdown <= 0) {
-						clearInterval(countdownInterval);
-						sendCodeButton.disabled = false;
-						sendCodeButton.classList.remove("disabled");
-						sendCodeButton.textContent = "发送验证码";
-					} else {
-						sendCodeButton.textContent = `重新发送 (${countdown}s)`;
-					}
-				}, 1000);
+			try {
+				const formData = new FormData();
+				formData.append("email", email);
+
+				// 修改这里：使用 BACKEND_API_BASE_URL 拼接正确的后端路由
+				const response = await fetch(`${BACKEND_API_BASE_URL}/send-code`, {
+					method: "POST",
+					body: formData,
+				});
+
+				if (response.ok) {
+					loginMessage.textContent = "验证码已发送，请查收邮箱。";
+					startCountdown();
+				} else {
+					const errorData = await response.json();
+					errorMessage.textContent = errorData.detail || "发送验证码失败。";
+					loginMessage.textContent = "";
+				}
+			} catch (error) {
+				console.error("发送验证码时出错:", error);
+				errorMessage.textContent = "网络错误或服务器无响应。";
+				loginMessage.textContent = "";
+			}
+		});
+
+		loginForm.addEventListener("submit", async (event) => {
+			event.preventDefault();
+			errorMessage.textContent = "";
+			loginMessage.textContent = "登录中...";
+
+			const email = emailInput.value.trim();
+			const code = codeInput.value.trim();
+			const redirectTo = redirectToInput.value;
+
+			if (!email || !code) {
+				errorMessage.textContent = "邮箱和验证码不能为空！";
+				loginMessage.textContent = "";
+				return;
 			}
 
-			sendCodeButton.addEventListener("click", async () => {
-				const email = emailInput.value.trim();
-				if (!email) {
-					errorMessage.textContent = "请输入邮箱地址！";
-					return;
-				}
+			try {
+				const formData = new FormData();
+				formData.append("email", email);
+				formData.append("code", code);
+				formData.append("redirect_to", redirectTo); // 传递重定向目标
 
-				errorMessage.textContent = "";
-				loginMessage.textContent = "发送中...";
+				// 修改这里：使用 BACKEND_API_BASE_URL 拼接正确的后端路由
+				const response = await fetch(`${BACKEND_API_BASE_URL}/login`, {
+					method: "POST",
+					body: formData,
+				});
 
-				try {
-					const formData = new FormData();
-					formData.append("email", email);
-
-					const response = await fetch("/send_verification_code", {
-						method: "POST",
-						body: formData,
-					});
-
-					if (response.ok) {
-						loginMessage.textContent = "验证码已发送，请查收邮箱。";
-						startCountdown();
-					} else {
-						const errorData = await response.json();
-						errorMessage.textContent = errorData.detail || "发送验证码失败。";
-						loginMessage.textContent = "";
+				if (response.ok) {
+					// 登录成功，重定向到内容页或之前尝试访问的页面
+					window.location.href = redirectTo;
+				} else {
+					const responseText = await response.text(); // 获取原始响应文本
+					try {
+						const errorData = JSON.parse(responseText); // 尝试解析为JSON
+						errorMessage.textContent = errorData.detail || "登录失败。";
+					} catch (e) {
+						// 如果不是JSON，直接显示原始文本
+						errorMessage.textContent =
+							responseText || "登录失败，服务器返回未知错误。";
 					}
-				} catch (error) {
-					console.error("发送验证码时出错:", error);
-					errorMessage.textContent = "网络错误或服务器无响应。";
-					loginMessage.textContent = "";
+					loginMessage.textContent = ""; // 清除登录中的消息
 				}
-			});
+			} catch (error) {
+				console.error("登录时出错:", error);
+				errorMessage.textContent = "网络错误或服务器无响应。";
+				loginMessage.textContent = "";
+			}
+		});
+	</script>
+</body>
 
-			loginForm.addEventListener("submit", async (event) => {
-				event.preventDefault();
-				errorMessage.textContent = "";
-				loginMessage.textContent = "登录中...";
-
-				const email = emailInput.value.trim();
-				const code = codeInput.value.trim();
-				const redirectTo = redirectToInput.value;
-
-				if (!email || !code) {
-					errorMessage.textContent = "邮箱和验证码不能为空！";
-					loginMessage.textContent = "";
-					return;
-				}
-
-				try {
-					const formData = new FormData();
-					formData.append("email", email);
-					formData.append("code", code);
-					formData.append("redirect_to", redirectTo); // 传递重定向目标
-
-					const response = await fetch("/login", {
-						method: "POST",
-						body: formData,
-					});
-
-					if (response.ok) {
-						// 登录成功，重定向到内容页或之前尝试访问的页面
-						window.location.href = redirectTo;
-					} else {
-						const responseText = await response.text(); // 获取原始响应文本
-						try {
-							const errorData = JSON.parse(responseText); // 尝试解析为JSON
-							errorMessage.textContent = errorData.detail || "登录失败。";
-						} catch (e) {
-							// 如果不是JSON，直接显示原始文本
-							errorMessage.textContent =
-								responseText || "登录失败，服务器返回未知错误。";
-						}
-						loginMessage.textContent = ""; // 清除登录中的消息
-					}
-				} catch (error) {
-					console.error("登录时出错:", error);
-					errorMessage.textContent = "网络错误或服务器无响应。";
-					loginMessage.textContent = "";
-				}
-			});
-		</script>
-	</body>
 </html>
