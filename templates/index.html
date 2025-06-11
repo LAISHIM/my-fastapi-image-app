@@ -5,7 +5,7 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>图像处理应用</title>
-	<link rel="stylesheet" href="/static/style.css" />
+	<link rel="stylesheet" href="static/style.css" />
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
 </head>
 
@@ -15,7 +15,8 @@
 			<div class="header-top">
 				<h1>🎨 智能图像处理</h1>
 				<div class="user-info">
-					<span id="userEmailDisplay">欢迎, 用户</span> <a href="#" id="logoutButton" class="logout-button">登出</a>
+					<span id="userEmailDisplay">欢迎, 用户</span>
+					<a href="#" id="logoutButton" class="logout-button">登出</a>
 				</div>
 			</div>
 			<p>上传您的图片，即刻体验灰度转换</p>
@@ -41,7 +42,7 @@
 			<h2>实时摄像头视频</h2>
 			<div class="video-wrapper">
 				<img id="videoFeed" src="" alt="Camera Feed"
-					onerror="this.onerror=null;this.src='/static/video_placeholder.png';" />
+					onerror="this.onerror=null;this.src='static/video_placeholder.png';" />
 			</div>
 			<p>此视频流显示实时摄像头画面及人脸检测。</p>
 		</section>
@@ -73,10 +74,12 @@
 		// 检查 JWT 是否有效并获取用户邮箱
 		async function checkAuthAndRedirect() {
 			try {
-				const response = await fetch(`${BACKEND_API_BASE_URL}/check_auth`); // 后端需要提供一个简单的认证检查路由
+				// 修正：使用 BACKEND_API_BASE_URL
+				const response = await fetch(`${BACKEND_API_BASE_URL}/check_auth`);
 				if (response.status === 401) {
 					// JWT 无效，重定向到登录页
-					window.location.href = `/login?redirect_to=${encodeURIComponent(
+					// 修正：重定向到 login.html
+					window.location.href = `login.html?redirect_to=${encodeURIComponent(
 						window.location.pathname + window.location.search
 					)}`;
 				} else if (response.ok) {
@@ -99,11 +102,13 @@
 		logoutButton.addEventListener("click", async (event) => {
 			event.preventDefault();
 			try {
+				// 修正：使用 BACKEND_API_BASE_URL
 				const response = await fetch(`${BACKEND_API_BASE_URL}/logout`, {
 					method: "GET", // 假设登出是 GET 请求
 				});
 				if (response.ok) {
-					window.location.href = `${window.location.origin}/login`; // 重定向到登录页
+					// 修正：重定向到 login.html
+					window.location.href = `${window.location.origin}/login.html`;
 				} else {
 					const errorData = await response.json();
 					alert(`登出失败: ${errorData.detail || "未知错误"}`);
@@ -141,14 +146,16 @@
 			formData.append("file", file);
 
 			try {
-				const response = await fetch(`${BACKEND_API_BASE_URL}/upload_image`, { // 修改：使用 BACKEND_API_BASE_URL
+				// 修正：使用 BACKEND_API_BASE_URL
+				const response = await fetch(`${BACKEND_API_BASE_URL}/upload_image`, {
 					method: "POST",
 					body: formData,
 				});
 
 				if (response.status === 401) {
 					// 未认证，重定向到登录页
-					window.location.href = `${window.location.origin}/login?redirect_to=${encodeURIComponent(
+					// 修正：重定向到 login.html
+					window.location.href = `login.html?redirect_to=${encodeURIComponent(
 						window.location.pathname + window.location.search
 					)}`;
 					return;
@@ -165,24 +172,24 @@
 				const originalImageCard = document.createElement("div");
 				originalImageCard.className = "image-card";
 				originalImageCard.innerHTML = `
-                        <h3>原始图片</h3>
-                        <div class="image-wrapper">
-                            <img src="${data.original_image_url.startsWith('http') ? data.original_image_url : `${BACKEND_API_BASE_URL}${data.original_image_url}`
+										<h3>原始图片</h3>
+										<div class="image-wrapper">
+												<img src="${data.original_image_url.startsWith('http') ? data.original_image_url : `${BACKEND_API_BASE_URL}${data.original_image_url}`
 					}" alt="Original Image" onload="this.style.opacity=1;">
-                        </div>
-                        <p>文件大小: ${formatBytes(file.size)}</p>
-                    `;
+										</div>
+										<p>文件大小: ${formatBytes(file.size)}</p>
+								`;
 
 				const processedImageCard = document.createElement("div");
 				processedImageCard.className = "image-card";
 				processedImageCard.innerHTML = `
-                        <h3>灰度处理图片</h3>
-                        <div class="image-wrapper">
-                            <img src="${data.processed_image_url.startsWith('http') ? data.processed_image_url : `${BACKEND_API_BASE_URL}${data.processed_image_url}`
+										<h3>灰度处理图片</h3>
+										<div class="image-wrapper">
+												<img src="${data.processed_image_url.startsWith('http') ? data.processed_image_url : `${BACKEND_API_BASE_URL}${data.processed_image_url}`
 					}" alt="Grayscale Image" onload="this.style.opacity=1;">
-                        </div>
-                        <p>处理完成</p>
-                    `;
+										</div>
+										<p>处理完成</p>
+								`;
 
 				// 将图片卡片添加到结果区域
 				resultsSection.appendChild(originalImageCard);

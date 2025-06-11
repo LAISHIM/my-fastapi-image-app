@@ -5,7 +5,7 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>登录 - 智能图像处理</title>
-	<link rel="stylesheet" href="/static/style.css" />
+	<link rel="stylesheet" href="static/style.css" />
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
 </head>
 
@@ -43,12 +43,13 @@
 	</div>
 
 	<script>
-		// 已将 BACKEND_API_BASE_URL 替换为您的实际后端 URL
-		const BACKEND_API_BASE_URL = "https://3571b520-68af-404d-828d-860db9009f16-00-3w177559c5lwh.sisko.replit.dev";
+		// 定义您的后端 API 基础 URL
+		const BACKEND_API_BASE_URL = "https://3571b520-68af-404d-828d-860db9009f16-00-3w1775559c5lwh.sisko.replit.dev";
 
 		const sendCodeButton = document.getElementById("sendCodeButton");
 		const emailInput = document.getElementById("email");
-		const codeInput = document.getElementById("codeInput"); // 修正：id为codeInput
+		// 修正：将获取 id 为 "code" 的元素
+		const codeInput = document.getElementById("code");
 		const loginForm = document.getElementById("loginForm");
 		const loginMessage = document.getElementById("loginMessage");
 		const errorMessage = document.getElementById("errorMessage");
